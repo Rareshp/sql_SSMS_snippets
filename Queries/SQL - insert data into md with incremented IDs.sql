@@ -2,9 +2,8 @@ DECLARE @LastTransferId INT
 DECLARE @LastTransactionId INT
 
 -- Get the last Transfer_Id and Transaction_Id values
-SELECT TOP 1 @LastTransferId = Transfer_Id, @LastTransactionId = Transaction_Id
-FROM Manual_Data_md
-ORDER BY [Orig_TS_UTC] DESC;
+SELECT @LastTransferId = MAX(Transfer_Id), @LastTransactionId = MAX(Transaction_Id)
+FROM Manual_Data_md;
 
 -- Increment the Transfer_Id and Transaction_Id values
 SET @LastTransferId = @LastTransferId + 1;
