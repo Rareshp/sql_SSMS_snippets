@@ -27,3 +27,34 @@ If you need DELETE as well, below is a join to get the IDs. Given Sheet1 with tI
 ```
 =TEXTJOIN(",", TRUE(), IF(ISNUMBER(SEARCH(A2, $Sheet1.C:C)), $Sheet1.A:A, ""))
 ```
+
+### Manual_Data inserts 
+I recommend using my go script https://github.com/Rareshp/go-mssql-insert-from-excel
+
+Otherwise you can create an Excel file, which should look like this:
+
+| Tag | Date (text) | NumValue | TransferId | TransactionId |
+| ---- | ---- | ---- | ---- | ---- |
+| E127 | 2024-02-10 | 11 | 1111 | 1010 |
+| E128 | 2024-02-10 | 12 | 1112 | 1011 |
+
+where TransferId and TransactionId are actually the previous values of the IDs.
+```SQL
+SELECT MAX(TransferId) and MAX(TransactionId) from Manual_Data_md
+```
+
+Below is the function you need to break apart and join back together the date field in what you want. In particular here is a complicated example where UTC time is previous date.
+```
+`=IF(ISBLANK(B2), "", "('"&IF(ISBLANK(B2), "", TEXT(DATE(YEAR(B2), MONTH(B2), DAY(B2)-1), "yyyy-mm-dd")&" 22:00:00.000', '"&B2&" 00:00:00.000', SYSUTCDATETIME(), SYSDATETIME(), '"&A2&"', "&C2&", 1, 1," &D2&", "&E2&", 'user'),"))
+```
+
+Remember to increment the IDs for every row, and between pages!
+```
+`=MAX($Pag1.D:D)
+```
+
+Gives: 
+```SQL
+('2024-02-09 22:00:00.000', '2024-02-10 00:00:00.000', SYSUTCDATETIME(), SYSDATETIME(), 'E127', 11, 1, 1, 1111, 1010, 'user'),
+('2024-02-09 22:00:00.000', '2024-02-10 00:00:00.000', SYSUTCDATETIME(), SYSDATETIME(), 'E128', 12, 1, 1, 1112, 1011, 'user'),
+```
