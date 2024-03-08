@@ -8,8 +8,12 @@ SELECT TOP 2
       Orig_TS_Local, [Last_Op_TS_Local]
       ,[Tag_Name]
       ,[Num_Value],
-      Num_Value - LAG(Num_Value)
-      OVER (ORDER BY Last_OP_TS_Local) AS difference
+      CASE
+        WHEN Num_Value > LAG(Num_Value) OVER (ORDER BY Last_OP_TS_Local)
+            THEN Num_Value - LAG(Num_Value) OVER (ORDER BY Last_OP_TS_Local)
+        ELSE
+            (1000000 - LAG(Num_Value) OVER (ORDER BY Last_OP_TS_Local)) + Num_Value
+      END AS difference
   FROM Manual_Data_md
   WHERE Tag_Name='Tag1'
   AND Orig_TS_Local BETWEEN @EndTime AND @StartTime
