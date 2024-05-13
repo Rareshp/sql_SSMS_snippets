@@ -54,14 +54,35 @@ From DowntimeReasons
 -- no selections
 
 
-DECLARE @LocalDateTime DATETIME = '[tp#Data]';
+DECLARE @InsertDateTime DATETIME = '[tp#Data]';
 -- better to let SQL Server deal with UTC instead 
-DECLARE @UTCDateTime DATETIME = @LocalDateTime AT TIME ZONE 'E. Europe Standard Time' AT TIME ZONE 'UTC';
+DECLARE @UTCDateTime DATETIME = @InsertDateTime AT TIME ZONE 'E. Europe Standard Time' AT TIME ZONE 'UTC';
+DECLARE @CurrentDate DATE = GETDATE();
 
+-- declare variables for TotalDownHours
+-- needed to avoid adding data if downtime hours exceeds 24
+DECLARE @TotalDownHours FLOAT;
+DECLARE @StartDate DATETIME = CONVERT(DATE, @InsertDateTime);
+DECLARE @EndDate DATETIME = DATEADD(HOUR, 24, @StartDate);
+
+SELECT @TotalDownHours = SUM(DownHours)
+FROM Downtime
+WHERE TimeLoc >= @StartDate AND TimeLoc < @EndDate
+AND Area='[f#Area]'
+GROUP BY Area;
+
+-- IF Statement to check if we are in current month, but allow for the first week
+IF (DAY(@CurrentDate) <= 5 
+OR ( MONTH(@InsertDateTime) = MONTH(@CurrentDate) AND YEAR(@InsertDateTime) = YEAR(@CurrentDate) ) )
+AND (DAY(@InsertDateTime) <= DAY(@CurrentDate))
+-- do not insert if downtime hours greater than 24
+AND (@TotalDownHours IS NULL OR ( (@TotalDownHours + [f#Ore_oprire]) <= 24.00) )
+
+BEGIN
 MERGE INTO Downtime AS target 
 USING (VALUES
 	(
-	@LocalDateTime, 
+	@InsertDateTime,
 	@UTCDateTime, 
 	'[cb#Area]', 
 	'[cb#DowntimeCategoryComboBox]', 
@@ -113,7 +134,11 @@ WHEN NOT MATCHED THEN
         source.DownHours,  -- this has a default value of 1; no need for case
         source.Comments
     );
-
+END
+ELSE
+BEGIN
+    RAISERROR (15600, -1, -1, 'Unauthorized insert');
+END
     
     
 --------
