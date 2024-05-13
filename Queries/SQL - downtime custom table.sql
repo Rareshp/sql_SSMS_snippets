@@ -106,7 +106,6 @@ AS source (
 ON target.TimeLoc = source.TimeLoc AND target.Area = source.Area
 WHEN MATCHED THEN
     UPDATE SET
-        target.DowntimeCategory = source.DowntimeCategory,
 	target.DowntimeCategory = CASE WHEN source.DowntimeCategory = '[cb#' + 'DowntimeCategoryComboBox]' THEN NULL ELSE source.DowntimeCategory END,
         target.DowntimeReason = CASE WHEN source.DowntimeReason = '[cb#' + 'DowntimeReasonComboBox]' THEN NULL ELSE source.DowntimeReason END,
         target.LowProductionCategory = CASE WHEN source.LowProductionCategory = '[cb#' + 'LowProductionCategory]' THEN NULL ELSE source.LowProductionCategory END,
