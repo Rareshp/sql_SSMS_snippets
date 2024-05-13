@@ -9,7 +9,6 @@ CREATE TABLE Downtime (
 	TimeLoc DATETIME NOT NULL,
 	TimeUtc DATETIME NOT NULL,
 	Area VARCHAR(50),
-	Equipment VARCHAR(255),
 	DowntimeCategory VARCHAR(100),
 	DowntimeReason VARCHAR(255),
 	LowProductionCategory VARCHAR(100),
@@ -65,7 +64,6 @@ USING (VALUES
 	@LocalDateTime, 
 	@UTCDateTime, 
 	'[cb#Area]', 
-	'[cb#Equipment]', 
 	'[cb#DowntimeCategoryComboBox]', 
 	'[cb#DowntimeReasonComboBox]', 
 	'[cb#LowProductionCategory]',
@@ -86,13 +84,14 @@ AS source (
 )
 ON target.TimeLoc = source.TimeLoc AND target.Area = source.Area
 WHEN MATCHED THEN
-    UPDATE SET 
+    UPDATE SET
         target.DowntimeCategory = source.DowntimeCategory,
-        target.DowntimeReason = source.DowntimeReason,
-        target.LowProductionCategory = source.LowProductionCategory,
-        target.LowProductionReason = source.LowProductionReason,
-        target.BadActorsCategory = source.BadActorsCategory,
-        target.BadActorsReason = source.BadActorsReason,
+	target.DowntimeCategory = CASE WHEN source.DowntimeCategory = '[cb#' + 'DowntimeCategoryComboBox]' THEN NULL ELSE source.DowntimeCategory END,
+        target.DowntimeReason = CASE WHEN source.DowntimeReason = '[cb#' + 'DowntimeReasonComboBox]' THEN NULL ELSE source.DowntimeReason END,
+        target.LowProductionCategory = CASE WHEN source.LowProductionCategory = '[cb#' + 'LowProductionCategory]' THEN NULL ELSE source.LowProductionCategory END,
+        target.LowProductionReason = CASE WHEN source.LowProductionReason = '[cb#' + 'LowProductionReason]' THEN NULL ELSE source.LowProductionReason END,
+        target.BadActorsCategory = CASE WHEN source.BadActorsCategory = '[cb#' + 'BadActorsCategory]' THEN NULL ELSE source.BadActorsCategory END,
+        target.BadActorsReason = CASE WHEN source.BadActorsReason = '[cb#' + 'BadActorsReason]' THEN NULL ELSE source.BadActorsReason END,
         target.DownHours = source.DownHours,
         target.Comments = source.Comments
 
@@ -105,7 +104,6 @@ WHEN NOT MATCHED THEN
         source.TimeLoc, 
         source.TimeUtc, 
         CASE WHEN source.Area = '[cb#' + 'Area]' THEN NULL ELSE source.Area END,  -- this will error out because NULL is not allowed
-        CASE WHEN source.Equipment = '[cb#' + 'Equipment]' THEN NULL ELSE source.DowntimeCategory END,
         CASE WHEN source.DowntimeCategory = '[cb#' + 'DowntimeCategoryComboBox]' THEN NULL ELSE source.DowntimeCategory END,
         CASE WHEN source.DowntimeReason = '[cb#' + 'DowntimeReasonComboBox]' THEN NULL ELSE source.DowntimeReason END,
         CASE WHEN source.LowProductionCategory = '[cb#' + 'LowProductionCategory]' THEN NULL ELSE source.LowProductionCategory END,
