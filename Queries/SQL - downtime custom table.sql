@@ -138,8 +138,41 @@ ELSE
 BEGIN
     RAISERROR (15600, -1, -1, 'Unauthorized insert');
 END
-    
-    
+
+-- NOTE: if you want to use the above as a procedure because you need to use it in multiple places, do this:
+-- use ALTER instead of droping the procedure
+CREATE PROCEDURE downtimeInsert
+	@InsertDateTime        DATETIME,
+	@Area                  char(50),
+	@DowntimeCategory      char(50),
+	@DowntimeReason        char(255),
+	@LowProductionCategory char(50),
+	@LowProductionReason   char(255),
+	@BadActorDowntime      char(255),
+	@BadActorLowProduction char(255),
+	@DownHours             REAL,
+	@Comments              char(255),
+	@UserName              char(255)
+AS
+BEGIN
+	SET NOCOUNT ON;
+	-- paste query from above USING Values of the variables 
+END;
+
+-- call the procedure like this:
+EXEC downtimeInsert
+	@InsertDateTime		= '[tp#Data]',
+	@Area			= '[cb#Area]', -- or [f#Area] if needed
+	@DowntimeCategory	= '[cb#DowntimeCategory]',
+	@DowntimeReason		= '[cb#DowntimeReason]',
+	@LowProductionCategory	= '[cb#LowProductionCategory]',
+	@LowProductionReason	= '[cb#LowProductionReason]',
+	@BadActorDowntime	= '[cb#BadActorDowntime]',
+	@BadActorLowProduction	= '[cb#BadActorLowProduction]',
+	@DownHours		= [f#DownHours],
+	@Comments		= '[f#Comemnts]',
+	@UserName		= '[f#user]' -- this must be an expression on page with:  ( function() return OdsGenCtx.Request.User; end )()
+;
 --------
 -- reports based on these are rather simple
 
